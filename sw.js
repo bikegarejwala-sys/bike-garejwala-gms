@@ -1,0 +1,5 @@
+const CACHE="bike-garejwala-gms-v1";
+const APP="./";
+self.addEventListener("install",event=>event.waitUntil((async()=>{const c=await caches.open(CACHE);await c.addAll([APP]);await self.skipWaiting()})()));
+self.addEventListener("activate",event=>event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim()})()));
+self.addEventListener("fetch",event=>{const req=event.request;if(req.method!=="GET")return;const url=new URL(req.url);if(url.origin===self.location.origin&&req.mode==="navigate"){event.respondWith((async()=>{try{const res=await fetch(req);const c=await caches.open(CACHE);c.put(APP,res.clone());return res}catch(e){return(await caches.match(APP))||Response.error()}})());return}if(url.hostname==="www.gstatic.com"){event.respondWith((async()=>{const c=await caches.open(CACHE);const cached=await c.match(req);const network=fetch(req).then(res=>{if(res.ok)c.put(req,res.clone());return res}).catch(()=>cached);return cached||network})())}});
